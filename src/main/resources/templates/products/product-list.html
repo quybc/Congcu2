@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Quản lý Sản phẩm - Thegioididong</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Top Banner (Red) -->
+    <div style="background-color: #e91e63; text-align: center; overflow: hidden;">
+        <img th:src="@{/images/top banner.png}" src="/images/top%20banner.png" alt="Top Banner" style="width: 100%; height: auto; display: block;">
+    </div>
+
+    <!-- Header -->
+    <header class="tgdd-header">
+        <div class="header-container">
+            <a href="/" class="logo-wrapper">
+                <div class="logo-tgdd"><i class="fas fa-mobile-alt"></i> thegioididong<span style="font-size: 10px;">.com</span></div>
+            </a>
+            <div class="search-bar">
+                <input type="text" placeholder="iPhone 17 và iPhone Air">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+            <div class="header-right d-flex align-items-center gap-3">
+                <div class="dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a href="#" class="header-link-item dropdown-toggle" id="manageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="link-text"><i class="fas fa-tasks"></i> Quản lý</div>
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="manageDropdown">
+                        <li><a class="dropdown-item" href="/categories">Quản lý danh mục</a></li>
+                        <li><a class="dropdown-item" href="/products">Quản lý sản phẩm</a></li>
+                        <li><a class="dropdown-item" href="/users">Quản lý người dùng</a></li>
+                        <li><a class="dropdown-item" href="/promotions">Quản lý khuyến mãi đổi điểm</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button class="dropdown-item text-danger" type="submit">Đăng xuất</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                <a href="/login" class="header-link-item" sec:authorize="isAnonymous()">
+                    <div class="link-text"><i class="fas fa-user"></i> Đăng nhập</div>
+                </a>
+                <div class="dropdown" sec:authorize="isAuthenticated() and !hasRole('ADMIN')">
+                    <a href="#" class="header-link-item dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="link-text"><i class="fas fa-user-circle"></i> <span sec:authentication="name"></span></div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li sec:authorize="hasRole('MANAGER')"><a class="dropdown-item" href="/products">Quản lý sản phẩm</a></li>
+                        <li><a class="dropdown-item" href="/rewards">Đổi điểm</a></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button class="dropdown-item text-danger" type="submit">Đăng xuất</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                <a href="#" class="header-link-item cart-item"><div class="link-text"><i class="fas fa-shopping-cart"></i> Giỏ hàng</div></a>
+                <div class="location-selector"><span><i class="fas fa-map-marker-alt"></i> Hồ Chí Minh <i class="fas fa-chevron-right" style="font-size: 10px;"></i></span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation (Categories) -->
+    <nav class="main-menu">
+        <div class="menu-container">
+            <a href="/" class="menu-item"><i class="fas fa-home"></i> Trang chủ</a>
+            <!-- Note: We might need to fetch categories here too, or just link to home -->
+            <a href="/categories" class="menu-item">Quản lý DM</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4" style="min-height: 500px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Quản lý Sản phẩm</h2>
+            <a href="/products/new" class="btn btn-primary"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Hình ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Giảm giá</th>
+                        <th>Danh mục</th>
+                        <th>Loại</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="product : ${products}">
+                        <td th:text="${product.id}"></td>
+                        <td>
+                            <img th:if="${product.image != null and product.image.startsWith('http')}" th:src="${product.image}" style="height: 50px; width: 50px; object-fit: contain;" alt="Product Image">
+                            <img th:if="${product.image != null and !product.image.startsWith('http')}" th:src="@{/images/{image}(image=${product.image})}" style="height: 50px; width: 50px; object-fit: contain;" alt="Product Image">
+                            <span th:if="${product.image == null}">No Image</span>
+                        </td>
+                        <td th:text="${product.name}" class="fw-bold"></td>
+                        <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '₫'}" class="text-danger fw-bold"></td>
+                        <td th:text="${product.quantity}"></td>
+                        <td th:text="${product.discount + '%'}"></td>
+                        <td th:text="${product.category != null ? product.category.name : 'N/A'}"></td>
+                        <td>
+                            <span th:if="${product.productType == 'KHUYEN_MAI'}" class="badge" style="background-color:#dc3545; font-size:0.82em;">
+                                <i class="fas fa-percent me-1"></i>Khuyến Mãi
+                            </span>
+                            <span th:if="${product.productType == 'QUA_TANG'}" class="badge" style="background-color:#198754; font-size:0.82em;">
+                                <i class="fas fa-gift me-1"></i>Quà Tặng
+                            </span>
+                            <span th:if="${product.productType == null or product.productType == 'NONE'}" class="badge bg-secondary" style="font-size:0.82em;">
+                                Bình Thường
+                            </span>
+                        </td>
+                        <td>
+                            <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                            <a th:href="@{/products/delete/{id}(id=${product.id})}" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top mt-4 py-4">
+        <div class="footer-container text-center text-muted">
+            <p>&copy; 2024 - Clone Web TheGioiDiDong by Spring Boot</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

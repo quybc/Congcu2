@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="product-list" th:remove="tag">
+        <div th:each="product : ${products}" class="product-card" th:classappend="${isFlashSale} ? 'fs-product-card' : ''">
+            <div class="fs-discount-badge" th:if="${isFlashSale and product.discount > 0}">
+                <span th:text="'-' + ${product.discount} + '%'"></span>
+            </div>
+            
+            <div th:class="${isFlashSale} ? 'card-content' : ''">
+                <!-- Image handling -->
+                <img th:if="${product.image != null and product.image.startsWith('http')}" 
+                     th:src="${product.image}" class="product-img" alt="Product Image">
+                
+                <img th:if="${product.image != null and !product.image.startsWith('http')}" 
+                     th:src="@{/images/{image}(image=${product.image})}" class="product-img" alt="Product Image">
+                     
+                <img th:if="${product.image == null}" 
+                     src="https://via.placeholder.com/200" class="product-img" alt="No Image">
+                     
+                <div class="product-name" th:text="${product.name}">Tên sản phẩm</div>
+                
+                <!-- Price Logic -->
+                <div class="price-container" th:if="${isFlashSale}">
+                    <div class="current-price" 
+                         th:text="${#numbers.formatDecimal(product.price * (1 - product.discount/100.0), 0, 'COMMA', 0, 'POINT') + '₫'}">
+                         10.000.000₫
+                    </div>
+                    <div class="old-price" 
+                         th:if="${product.discount > 0}"
+                         th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '₫'}">
+                         12.000.000₫
+                    </div>
+                    <div class="discount-percent" th:if="${product.discount > 0}" th:text="'-' + ${product.discount} + '%'">-10%</div>
+                </div>
+
+                <div class="product-price" th:if="${!isFlashSale}" 
+                     th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '₫'}">10.000.000₫</div>
+                
+                <!-- Extra info for Flash Sale -->
+                <div class="stock-status" th:if="${isFlashSale}">
+                    <div class="fire-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stock-text">Còn 5/10 suất</div>
+                </div>
+
+                <!-- Extra info for Regular -->
+                <div class="text-warning my-1" style="font-size: 12px;" th:if="${!isFlashSale}">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <span class="text-muted">(10)</span>
+                </div>
+                
+                <a th:href="@{/products/detail/{id}(id=${product.id})}" 
+                   th:class="${isFlashSale} ? 'btn-buy-fs' : 'btn-buy'" 
+                   th:text="${isFlashSale} ? 'Mua ngay' : 'XEM CHI TIẾT'">
+                   Mua ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

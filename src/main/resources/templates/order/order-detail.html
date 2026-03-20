@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Chi tiết đơn hàng</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="tgdd-header">
+        <div class="header-container">
+            <a href="/" class="logo-wrapper">
+                <div class="logo-tgdd"><i class="fas fa-mobile-alt"></i> thegioididong<span style="font-size: 10px;">.com</span></div>
+            </a>
+            <div class="header-right d-flex align-items-center gap-3">
+                <a href="/order/manage" class="text-white text-decoration-none">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mt-4 mb-5">
+        <div class="row">
+            <!-- Order Info -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-header bg-white fw-bold">Thông tin khách hàng</div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Họ tên:</strong> <span th:text="${order.customerName}"></span></p>
+                        <p class="mb-1"><strong>SĐT:</strong> <span th:text="${order.customerPhone}"></span></p>
+                        <p class="mb-1"><strong>Địa chỉ:</strong> <span th:text="${order.customerAddress}"></span></p>
+                        <p class="mb-0"><strong>Giới tính:</strong> <span th:text="${order.customerGender}"></span></p>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold">Thông tin đơn hàng</div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Mã đơn:</strong> <span class="text-primary fw-bold" th:text="'#' + ${order.id}"></span></p>
+                        <p class="mb-1"><strong>Thanh toán:</strong> <span th:text="${order.paymentMethod}"></span></p>
+                        <p class="mb-1"><strong>Trạng thái:</strong> <span class="badge bg-success" th:text="${order.paymentStatus}"></span></p>
+                        <p class="mb-0" th:if="${order.voucherDiscount > 0}">
+                            <strong>Voucher:</strong>
+                            <span class="text-success" th:text="${order.voucherCode + ' (-' + #numbers.formatDecimal(order.voucherDiscount, 0, 'COMMA', 0, 'POINT') + '₫)'}"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold">Chi tiết sản phẩm</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="detail : ${order.orderDetails}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img th:if="${detail.product.image != null and detail.product.image.startsWith('http')}" 
+                                                     th:src="${detail.product.image}" class="img-thumbnail me-2" style="width: 50px; height: 50px; object-fit: contain;">
+                                                <img th:if="${detail.product.image != null and !detail.product.image.startsWith('http')}" 
+                                                     th:src="@{/images/{image}(image=${detail.product.image})}" class="img-thumbnail me-2" style="width: 50px; height: 50px; object-fit: contain;">
+                                                
+                                                <div>
+                                                    <div class="fw-bold" style="font-size: 14px;" th:text="${detail.product.name}"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" th:text="${detail.quantity}"></td>
+                                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.price, 0, 'COMMA', 0, 'POINT') + '₫'}"></td>
+                                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(detail.price * detail.quantity, 0, 'COMMA', 0, 'POINT') + '₫'}"></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-light">
+                                    <tr th:if="${order.voucherDiscount > 0}">
+                                        <td colspan="3" class="text-end text-success">Giảm voucher:</td>
+                                        <td class="text-end text-success" th:text="'- ' + ${#numbers.formatDecimal(order.voucherDiscount, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end">Phí vận chuyển:</td>
+                                        <td class="text-end" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + '₫'}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end fw-bold fs-5">TỔNG CỘNG:</td>
+                                        <td class="text-end fw-bold fs-5 text-danger" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

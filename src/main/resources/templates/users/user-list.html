@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Quản lý người dùng</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="tgdd-header">
+    <div class="header-container">
+        <a href="/" class="logo-wrapper">
+            <div class="logo-tgdd"><i class="fas fa-mobile-alt"></i> thegioididong<span style="font-size: 10px;">.com</span></div>
+        </a>
+        <div class="header-right d-flex align-items-center gap-3">
+            <div class="dropdown" sec:authorize="hasRole('ADMIN')">
+                <a href="#" class="header-link-item dropdown-toggle" id="manageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="link-text"><i class="fas fa-tasks"></i> Quản lý</div>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="manageDropdown">
+                    <li><a class="dropdown-item" href="/categories">Quản lý danh mục</a></li>
+                    <li><a class="dropdown-item" href="/products">Quản lý sản phẩm</a></li>
+                    <li><a class="dropdown-item" href="/order/manage">Quản lý đơn hàng</a></li>
+                    <li><a class="dropdown-item" href="/users">Quản lý người dùng</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post">
+                            <button class="dropdown-item text-danger" type="submit">Đăng xuất</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <a href="/" class="header-link-item">
+                <div class="link-text"><i class="fas fa-home"></i> Trang chủ</div>
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="container mt-4 mb-5">
+    <h2 class="mb-3">Quản lý người dùng</h2>
+
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+    <form method="get" action="/users" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <input type="text" class="form-control" name="keyword" placeholder="Tìm theo username" th:value="${keyword}">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" name="roleId">
+                <option value="">Tất cả quyền</option>
+                <option th:each="roleOption : ${roles}"
+                        th:value="${roleOption.id}"
+                        th:text="${roleOption.name + ' (ID ' + roleOption.id + ')'}"
+                        th:selected="${selectedRoleId != '' and selectedRoleId == roleOption.id}"></option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">Lọc</button>
+        </div>
+        <div class="col-md-2">
+            <a href="/users" class="btn btn-outline-secondary w-100">Đặt lại</a>
+        </div>
+    </form>
+
+    <div class="table-responsive bg-white shadow-sm rounded p-3">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Quyền</th>
+                <th>Trạng thái</th>
+                <th>Thay đổi quyền</th>
+                <th>Kích hoạt/Vô hiệu</th>
+                <th>Xóa</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${users}">
+                <td th:text="${user.id}"></td>
+                <td>
+                    <span th:text="${user.username}"></span>
+                    <span class="badge bg-primary ms-1" th:if="${#authentication != null and #authentication.name == user.username}">Bạn</span>
+                </td>
+                <td><span class="badge bg-info text-dark" th:text="${roleNameMap[user.id] + ' (ID ' + user.userRole.roleId + ')'}"></span></td>
+                <td>
+                    <span class="badge bg-success" th:if="${user.enabled}">Đang hoạt động</span>
+                    <span class="badge bg-secondary" th:unless="${user.enabled}">Đã vô hiệu</span>
+                </td>
+                <td>
+                    <form th:action="@{/users/{id}/role(id=${user.id})}" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="filterRoleId" th:value="${selectedRoleId}">
+                        <input type="hidden" name="keyword" th:value="${keyword}">
+                        <select name="roleId" class="form-select form-select-sm" style="min-width: 120px;">
+                            <option th:each="roleOption : ${roles}"
+                                    th:value="${roleOption.id}"
+                                    th:text="${roleOption.name + ' (ID ' + roleOption.id + ')'}"
+                                    th:selected="${user.userRole.roleId == roleOption.id}"></option>
+                        </select>
+                        <button class="btn btn-sm btn-warning" type="submit">Lưu</button>
+                    </form>
+                </td>
+                <td>
+                    <form th:action="@{/users/{id}/toggle-status(id=${user.id})}" method="post">
+                        <input type="hidden" name="filterRoleId" th:value="${selectedRoleId}">
+                        <input type="hidden" name="keyword" th:value="${keyword}">
+                        <button class="btn btn-sm" th:classappend="${user.enabled} ? 'btn-outline-secondary' : 'btn-outline-success'" type="submit"
+                                th:text="${user.enabled} ? 'Vô hiệu' : 'Kích hoạt'"></button>
+                    </form>
+                </td>
+                <td>
+                    <form th:action="@{/users/{id}/delete(id=${user.id})}" method="post">
+                        <input type="hidden" name="filterRoleId" th:value="${selectedRoleId}">
+                        <input type="hidden" name="keyword" th:value="${keyword}">
+                        <button class="btn btn-sm btn-danger" type="submit">Xóa</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${users.isEmpty()}">
+                <td colspan="7" class="text-center text-muted py-3">Không có người dùng phù hợp</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

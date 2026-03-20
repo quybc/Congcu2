@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Xác nhận đơn hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white py-3">
+            <h4 class="mb-0">✅ Đặt hàng thành công!</h4>
+        </div>
+        <div class="card-body p-4">
+            <h5 class="card-title text-success mb-3">Thông tin đơn hàng</h5>
+            <div class="mb-3">
+                <strong>Người nhận:</strong> <span th:text="${order.customerName}"></span> 
+                <span th:if="${order.customerGender != null}" th:text="'(' + ${order.customerGender} + ')'"></span><br>
+                <strong>Số điện thoại:</strong> <span th:text="${order.customerPhone}"></span><br>
+                <strong>Địa chỉ:</strong> <span th:text="${order.customerAddress}"></span><br>
+                <strong>Điểm tích lũy:</strong> <span th:text="${order.customer != null ? order.customer.points : 0}"></span> điểm
+            </div>
+            
+            <h5 class="card-title text-success mb-3">Chi tiết sản phẩm</h5>
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th class="text-center">Số lượng</th>
+                        <th class="text-end">Đơn giá</th>
+                        <th class="text-end">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="detail : ${order.orderDetails}">
+                        <td th:text="${detail.product.name}">Product Name</td>
+                        <td class="text-center" th:text="${detail.quantity}">1</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.price, 0, 'COMMA', 0, 'POINT')} + '₫'">100,000₫</td>
+                        <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(detail.price * detail.quantity, 0, 'COMMA', 0, 'POINT')} + '₫'">100,000₫</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end">Tạm tính:</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(order.totalPrice - order.shippingFee, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-end">Phí vận chuyển:</td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+                    </tr>
+                    <tr th:if="${order.voucherDiscount > 0}">
+                        <td colspan="3" class="text-end text-success" th:text="${order.voucherCode != null ? 'Voucher (' + order.voucherCode + '):' : 'Voucher:'}"></td>
+                        <td class="text-end text-success" th:text="'- ' + ${#numbers.formatDecimal(order.voucherDiscount, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+                    </tr>
+                    <tr class="table-active">
+                        <td colspan="3" class="text-end fw-bold">Tổng cộng:</td>
+                        <td class="text-end text-danger fw-bold fs-5" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">200,000₫</td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <div class="d-flex justify-content-center mt-4">
+                <a href="/" class="btn btn-primary px-4">Tiếp tục mua sắm</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

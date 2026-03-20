@@ -1,0 +1,47 @@
+/* Petal Container - Fixed to cover the screen but allow clicks to pass through */
+#petal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+/* Individual Petal Style */
+.petal {
+    position: absolute;
+    display: block;
+    background: #ffc0cb; /* Pink color */
+    border-radius: 100% 0% 100% 0%; /* Leaf/Petal shape */
+    opacity: 0.8;
+    box-shadow: 0 0 2px rgba(0,0,0,0.1);
+}
+
+/* Animation Keyframes */
+@keyframes fall {
+    0% {
+        top: -10%;
+        transform: translateX(0) rotate(0deg);
+        opacity: 0.8;
+    }
+    100% {
+        top: 110%;
+        transform: translateX(100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes sway {
+    0% {
+        transform: translateX(0px);
+    }
+    50% {
+        transform: translateX(50px);
+    }
+    100% {
+        transform: translateX(0px);
+    }
+}

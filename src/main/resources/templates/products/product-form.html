@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thông tin sản phẩm</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .product-type-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 130px;
+        }
+        .product-type-card:hover {
+            border-color: #aaa;
+            background: #f8f9fa;
+        }
+        input[type="radio"]:checked + .product-type-card {
+            border-color: #0d6efd;
+            background: #e8f0fe;
+        }
+        input[type="radio"].type-promo:checked + .product-type-card {
+            border-color: #dc3545;
+            background: #fde8eb;
+        }
+        input[type="radio"].type-gift:checked + .product-type-card {
+            border-color: #198754;
+            background: #e8f5ed;
+        }
+        .type-radio-wrapper {
+            position: relative;
+        }
+        .type-radio-wrapper input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5" style="max-width: 700px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0" th:text="${product.id == null ? '➕ Thêm sản phẩm mới' : '✏️ Cập nhật sản phẩm'}"></h4>
+        </div>
+        <div class="card-body p-4">
+            <form th:action="@{/products/save}" th:object="${product}" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" th:field="*{image}"> <!-- Keep old image if no new one uploaded -->
+
+                <div class="mb-3">
+                    <label for="name" class="form-label fw-semibold">Tên sản phẩm:</label>
+                    <input type="text" th:field="*{name}" class="form-control" id="name" required placeholder="Nhập tên sản phẩm...">
+                </div>
+
+                <div class="mb-3">
+                    <label for="price" class="form-label fw-semibold">Giá (₫):</label>
+                    <input type="number" step="0.01" th:field="*{price}" class="form-control" id="price" required placeholder="0">
+                </div>
+
+                <div class="mb-3">
+                    <label for="quantity" class="form-label fw-semibold">Tổng số lượng trong kho:</label>
+                    <input type="number" th:field="*{quantity}" class="form-control" id="quantity" required placeholder="0" min="0">
+                </div>
+
+                <div class="mb-3">
+                    <label for="discount" class="form-label fw-semibold">Giảm giá (%):</label>
+                    <input type="number" th:field="*{discount}" class="form-control" id="discount" placeholder="0" min="0" max="100">
+                </div>
+
+                <div class="mb-3">
+                    <label for="promotionQuantity" class="form-label fw-semibold">Số lượng khuyến mãi:</label>
+                    <input type="number" th:field="*{promotionQuantity}" class="form-control" id="promotionQuantity" placeholder="0" min="0">
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label fw-semibold">Mô tả:</label>
+                    <textarea th:field="*{description}" class="form-control" id="description" rows="3" placeholder="Nhập mô tả sản phẩm..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="category" class="form-label fw-semibold">Danh mục:</label>
+                    <select th:field="*{category}" class="form-select" id="category">
+                        <option value="">-- Chọn danh mục --</option>
+                        <th:block th:each="entry : ${groupedCategories}">
+                            <optgroup th:label="${entry.key}">
+                                <option th:each="cat : ${entry.value}"
+                                        th:value="${cat.id}"
+                                        th:text="${cat.displayName}"></option>
+                            </optgroup>
+                        </th:block>
+                    </select>
+                </div>
+
+                <!-- Loại sản phẩm -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Loại sản phẩm:</label>
+                    <div class="d-flex flex-wrap gap-3 mt-1">
+
+                        <!-- Bình thường -->
+                        <label class="type-radio-wrapper">
+                            <input type="radio" name="productType" value="NONE"
+                                   th:checked="${product.productType == null or product.productType == 'NONE'}">
+                            <div class="product-type-card">
+                                <i class="fas fa-tag text-secondary fs-5"></i>
+                                <span class="fw-semibold text-secondary">Bình Thường</span>
+                            </div>
+                        </label>
+
+                        <!-- Khuyến mãi -->
+                        <label class="type-radio-wrapper">
+                            <input type="radio" name="productType" value="KHUYEN_MAI" class="type-promo"
+                                   th:checked="${product.productType == 'KHUYEN_MAI'}">
+                            <div class="product-type-card">
+                                <i class="fas fa-percent text-danger fs-5"></i>
+                                <span class="fw-semibold text-danger">Khuyến Mãi</span>
+                            </div>
+                        </label>
+
+                        <!-- Quà tặng -->
+                        <label class="type-radio-wrapper">
+                            <input type="radio" name="productType" value="QUA_TANG" class="type-gift"
+                                   th:checked="${product.productType == 'QUA_TANG'}">
+                            <div class="product-type-card">
+                                <i class="fas fa-gift text-success fs-5"></i>
+                                <span class="fw-semibold text-success">Quà Tặng</span>
+                            </div>
+                        </label>
+
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="imageProduct" class="form-label fw-semibold">Hình ảnh:</label>
+                    <input type="file" name="imageProduct" class="form-control" id="imageProduct" accept="image/*">
+                    <div th:if="${product.image != null}" class="mt-2">
+                        <p class="text-muted mb-1">Hình ảnh hiện tại:</p>
+                        <img th:src="@{/images/{image}(image=${product.image})}" style="max-height: 100px; border-radius:8px; border:1px solid #ddd; padding:4px;">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-1"></i> Lưu
+                    </button>
+                    <a href="/products" class="btn btn-secondary px-4">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
