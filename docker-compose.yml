@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # 1. Định nghĩa Database (MySQL)
   db:
     image: mysql:8.0
     container_name: mysql-db
@@ -10,25 +7,24 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: webbanhang
     ports:
-      - "3307:3306"  # Đổi thành 3307 để không bị trùng với MySQL máy thật
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
-  # 2. Định nghĩa App Spring Boot
   app:
     build: .
     image: caoquy/buicaoquy-app:latest
     container_name: spring-app
     restart: always
     ports:
-      - "8080:3000"  # Máy thật : Container
+      - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/webbanhang?allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/webbanhang?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
     depends_on:
       - db
 
-# Giữ lại dữ liệu MySQL khi tắt container
 volumes:
   mysql_data:

@@ -1,0 +1,9 @@
+.git
+.github
+.idea
+.vscode
+.mvn
+target
+build_log.txt
+build_error.txt
+*.iml
