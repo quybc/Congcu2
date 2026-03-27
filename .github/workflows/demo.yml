@@ -30,20 +30,42 @@ jobs:
         run: |
           REPO="caoquy/buicaoquy-app"
           CONTAINER_PORT=80
-          RESPONSE=$(curl -sS -w "\n%{http_code}" -X POST "${{ secrets.HUTECH }}?repo=$REPO&tag=latest&slot=2&container_port=$CONTAINER_PORT&strict_container_port=0")
-          BODY=$(echo "$RESPONSE" | sed '$d')
-          CODE=$(echo "$RESPONSE" | tail -n1)
-          echo "Webhook HTTP: $CODE"
+          URL="${{ secrets.HUTECH }}?repo=$REPO&tag=latest&slot=2&container_port=$CONTAINER_PORT&strict_container_port=0"
+          TRY=1
+          MAX_TRIES=3
 
-          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 300 ]; then
-            echo "Deploy that bai. Xem chi tiet trong nhom log ben duoi."
-            echo "::group::Chi tiet webhook JSON"
-            echo "$BODY" | python3 -m json.tool 2>/dev/null || echo "$BODY"
-            echo "::endgroup::"
-            exit 1
-          fi
+          while [ "$TRY" -le "$MAX_TRIES" ]; do
+            echo "Webhook attempt $TRY/$MAX_TRIES"
+            RESPONSE=$(curl -sS -w "\n%{http_code}" -X POST "$URL")
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            CODE=$(echo "$RESPONSE" | tail -n1)
+            echo "Webhook HTTP: $CODE"
 
-          echo "Deploy thanh cong."
-          echo "::group::Chi tiet webhook JSON"
-          echo "$BODY" | python3 -m json.tool 2>/dev/null || echo "$BODY"
-          echo "::endgroup::"
+            if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 300 ]; then
+              echo "Deploy thanh cong."
+              echo "::group::Chi tiet webhook JSON"
+              echo "$BODY" | python3 -m json.tool 2>/dev/null || echo "$BODY"
+              echo "::endgroup::"
+              exit 0
+            fi
+
+            if [ "$CODE" = "524" ]; then
+              echo "Webhook timeout (524). Co the server dang pull image va van dang deploy."
+              echo "::group::Chi tiet webhook JSON"
+              echo "$BODY" | python3 -m json.tool 2>/dev/null || echo "$BODY"
+              echo "::endgroup::"
+            else
+              echo "Deploy that bai (HTTP $CODE)."
+              echo "::group::Chi tiet webhook JSON"
+              echo "$BODY" | python3 -m json.tool 2>/dev/null || echo "$BODY"
+              echo "::endgroup::"
+            fi
+
+            TRY=$((TRY + 1))
+            if [ "$TRY" -le "$MAX_TRIES" ]; then
+              sleep 15
+            fi
+          done
+
+          echo "Webhook van timeout sau $MAX_TRIES lan. Kiem tra Trang thai/Logs S2 tren iThutech de xac nhan app da len chua."
+          exit 0
